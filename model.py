@@ -15,8 +15,8 @@ class FastSRGAN(object):
         """
         self.hr_height = args.hr_size
         self.hr_width = args.hr_size
-        self.lr_height = self.hr_height // 2  # Low resolution height
-        self.lr_width = self.hr_width // 2  # Low resolution width
+        self.lr_height = self.hr_height // 4  # Low resolution height
+        self.lr_width = self.hr_width // 4  # Low resolution width
         self.lr_shape = (self.lr_height, self.lr_width, 3)
         self.hr_shape = (self.hr_height, self.hr_width, 3)
         self.iterations = 0
@@ -176,10 +176,41 @@ class FastSRGAN(object):
             u = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(u)
             u = keras.layers.PReLU(shared_axes=[1, 2])(u)
             return u
+        # ############### edsr module ##################
+        def res_block(input_tensor, filters, scale=0.1):
+            x = keras.layers.Conv2D(filters=filters, kernel_size=3, strides=1, padding='same')(input_tensor)
+            x = keras.layers.Activation('relu')(x)
+
+            x = keras.layers.Conv2D(filters=filters, kernel_size=3, strides=1, padding='same')(x)
+            if scale:
+                x = keras.layers.Lambda(lambda t: t * scale)(x)
+            x = keras.layers.Add()([x, input_tensor])
+
+            return x
+
+        def solve_lambda(x):
+            import tensorflow as tf
+            result = tf.nn.depth_to_space(x,2)
+            return result
+
+        def sub_pixel_conv2d(scale=2, **kwargs):
+            return keras.layers.Lambda(solve_lambda)
+
+
+        def upsample(input_tensor, filters):
+            x = keras.layers.Conv2D(filters=filters * 4, kernel_size=3, strides=1, padding='same')(input_tensor)
+            x = sub_pixel_conv2d(scale=2)(x)
+            x = keras.layers.Activation('relu')(x)
+            return x
+
+        # #########################################
 
         # Low resolution image input
         img_lr = keras.Input(shape=self.lr_shape)
 
+
+        # ###### Fast-SRGan construct ######
+        '''     
         # Pre-residual block
         c1 = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(img_lr)
         c1 = keras.layers.BatchNormalization()(c1)
@@ -196,11 +227,35 @@ class FastSRGAN(object):
         c2 = keras.layers.Add()([c2, c1])
         
         # Upsampling
-        u2 = deconv2d(c2)
-        #u2 = deconv2d(u1)
+        u1 = deconv2d(c2)
+        u2 = deconv2d(u1)
 
         # Generate high resolution output
         gen_hr = keras.layers.Conv2D(3, kernel_size=3, strides=1, padding='same', activation='tanh')(u2)
+        '''
+
+        # ###### edsr construct ######
+        x = x_1 = keras.layers.Conv2D(filters=self.gf, kernel_size=3, strides=1, padding='same')(img_lr)
+        n_id_block = 16
+        for _ in range(n_id_block):
+            x = res_block(x, filters=self.gf)
+
+        x = keras.layers.Conv2D(filters=self.gf, kernel_size=3, strides=1, padding='same')(x)
+
+        x = keras.layers.Add()([x_1, x])
+        # n_sub_block = 2
+        # for _ in range(n_sub_block):
+        #     x = upsample(x, self.gf)
+        u1 = deconv2d(x)
+        u2 = deconv2d(u1)
+        # Generate high resolution output
+        gen_hr = keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, padding='same')(u2)
+
+
+
+
+        print('gen_hr size is {}'.format(gen_hr.shape))
+        print('img_lr size is {}'.format(img_lr.shape))
 
         return keras.models.Model(img_lr, gen_hr)
 

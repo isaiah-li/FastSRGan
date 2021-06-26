@@ -3,6 +3,7 @@ from dataloader import DataLoader
 from model import FastSRGAN
 import tensorflow as tf
 import os
+import shutil
 
 parser = ArgumentParser()
 parser.add_argument('--image_dir', type=str, help='Path to high resolution image directory.')
@@ -12,8 +13,7 @@ parser.add_argument('--hr_size', default=384, type=int, help='Low resolution inp
 parser.add_argument('--lr', default=1e-4, type=float, help='Learning rate for optimizers.')
 parser.add_argument('--save_iter', default=200, type=int,
                     help='The number of iterations to save the tensorboard summaries and models.')
-parser.add_argument('--model_generator', default='models/generator_test.h5', type=str, help='model_generator.')
-parser.add_argument('--model_discriminator', default='models/discriminator_test.h5', type=str, help='model_discriminator.')
+parser.add_argument('--model_name', default='test_model', type=str, help='model_generator and discriminator name.')
 
 
 
@@ -101,7 +101,7 @@ def train_step(model, x, y):
     return d_loss, adv_loss, content_loss, mse_loss
 
 
-def train(model, dataset, log_iter, writer):
+def train(model, dataset, log_iter, writer,dir_name):
     """
     Function that defines a single training step for the SR-GAN.
     Args:
@@ -126,8 +126,8 @@ def train(model, dataset, log_iter, writer):
                 tf.summary.image('High Res', tf.cast(255 * (y + 1.0) / 2.0, tf.uint8), step=model.iterations)
                 tf.summary.image('Generated', tf.cast(255 * (model.generator.predict(x) + 1.0) / 2.0, tf.uint8),
                                  step=model.iterations)
-                model.generator.save('models/generator_test_2k.h5')
-                model.discriminator.save('models/discriminator_test_2k.h5')
+                model.generator.save('models/{}/generator_{}_{}.h5'.format(dir_name,dir_name,model.iterations))
+                model.discriminator.save('models/{}/discriminator_{}_{}.h5'.format(dir_name,dir_name,model.iterations))
                 writer.flush()
             model.iterations += 1
 
@@ -139,6 +139,11 @@ def main():
     # create directory for saving trained models.
     if not os.path.exists('models'):
         os.makedirs('models')
+    
+    if os.path.exists('models/{}'.format(args.model_name)):
+        shutil.rmtree('models/{}'.format(args.model_name))
+    else:
+        os.makedirs('models/{}'.format(args.model_name))
 
     # Create the tensorflow dataset.
     ds = DataLoader(args.image_dir, args.hr_size).dataset(args.batch_size)
@@ -147,17 +152,20 @@ def main():
     gan = FastSRGAN(args)
 
     # Define the directory for saving pretrainig loss tensorboard summary.
-    pretrain_summary_writer = tf.summary.create_file_writer('logs/pretrain')
+    pretrain_summary_writer = tf.summary.create_file_writer('logs/pretrain_{}'.format(args.model_name))
 
     # Run pre-training.
     pretrain_generator(gan, ds, pretrain_summary_writer)
 
     # Define the directory for saving the SRGAN training tensorbaord summary.
-    train_summary_writer = tf.summary.create_file_writer('logs/train')
+    train_summary_writer = tf.summary.create_file_writer('logs/train_{}'.format(args.model_name))
 
+    
     # Run training.
-    for _ in range(args.epochs):
-        train(gan, ds, args.save_iter, train_summary_writer)
+    for epochIndex in range(args.epochs):
+        print('This epoch is {}, starting'.format(epochIndex))
+        train(gan, ds, args.save_iter, train_summary_writer,args.model_name)
+    print('Training end')
 
 
 if __name__ == '__main__':
