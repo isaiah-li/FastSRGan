@@ -71,7 +71,7 @@ class DataLoader(object):
         """
 
         low_res = tf.image.resize(high_res, 
-                                  [self.image_size // 2, self.image_size // 2], 
+                                  [self.image_size // 4, self.image_size // 4], 
                                   method='bicubic')
 
         return low_res, high_res
