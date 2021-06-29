@@ -3,4 +3,4 @@
 #python infer.py --image_dir '/mnt/SuperResolution/data/test_Internet' --output_dir 'result/test_Internet_result-1' --model 'models/generator_test.h5'
 #python infer.py --image_dir '/mnt/SuperResolution/data/test_Internet' --output_dir 'result/test_Internet_result-2k' --model 'models/generator_test_4k.h5'
 
-python infer.py --image_dir '/mnt/SuperResolution/data/test_Internet' --output_dir 'result/test_edsr_deconv_model-4k' --model_name 'edsr_deconv_model'
+python infer.py --image_dir '/mnt/SuperResolution/data/test_Internet' --output_dir 'result/fastsr_model-4k' --model_name 'fastsr_model'

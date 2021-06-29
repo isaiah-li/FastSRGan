@@ -101,7 +101,7 @@ def train_step(model, x, y):
     return d_loss, adv_loss, content_loss, mse_loss
 
 
-def train(model, dataset, log_iter, writer,dir_name):
+def train(model, dataset, log_iter, writer,dir_name,quant_name = ''):
     """
     Function that defines a single training step for the SR-GAN.
     Args:
@@ -126,8 +126,8 @@ def train(model, dataset, log_iter, writer,dir_name):
                 tf.summary.image('High Res', tf.cast(255 * (y + 1.0) / 2.0, tf.uint8), step=model.iterations)
                 tf.summary.image('Generated', tf.cast(255 * (model.generator.predict(x) + 1.0) / 2.0, tf.uint8),
                                  step=model.iterations)
-                model.generator.save('models/{}/generator_{}_{}.h5'.format(dir_name,dir_name,model.iterations))
-                model.discriminator.save('models/{}/discriminator_{}_{}.h5'.format(dir_name,dir_name,model.iterations))
+                model.generator.save('models/{}/{}generator_{}_{}.h5'.format(dir_name,quant_name,dir_name,model.iterations))
+                model.discriminator.save('models/{}/{}discriminator_{}_{}.h5'.format(dir_name,quant_name,dir_name,model.iterations))
                 writer.flush()
             model.iterations += 1
 
