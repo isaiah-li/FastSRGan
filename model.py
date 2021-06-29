@@ -174,7 +174,8 @@ class FastSRGAN(object):
             """
             u = keras.layers.UpSampling2D(size=2, interpolation='bilinear')(layer_input)
             u = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(u)
-            u = keras.layers.PReLU(shared_axes=[1, 2])(u)
+            u = keras.layers.ReLU()(u)
+            # u = keras.layers.PReLU(shared_axes=[1, 2])(u)
             return u
         # ############### edsr module ##################
         def res_block(input_tensor, filters, scale=0.1):
@@ -210,11 +211,13 @@ class FastSRGAN(object):
 
 
         # ###### Fast-SRGan construct ######
-        '''     
+             
         # Pre-residual block
         c1 = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(img_lr)
         c1 = keras.layers.BatchNormalization()(c1)
-        c1 = keras.layers.PReLU(shared_axes=[1, 2])(c1)
+        # c1 = keras.layers.PReLU(shared_axes=[1, 2])(c1)
+        c1 = keras.layers.ReLU()(c1)
+
 
         # Propogate through residual blocks
         r = residual_block(c1, self.gf, 0)
@@ -250,6 +253,7 @@ class FastSRGAN(object):
         u2 = deconv2d(u1)
         # Generate high resolution output
         gen_hr = keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, padding='same')(u2)
+        '''
 
 
 

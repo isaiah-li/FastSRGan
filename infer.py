@@ -46,7 +46,7 @@ def main():
     if not os.path.exists (modelpath):
         assert ('please check the model dir')
     else:
-        modelpath = 'models/' + args.model_name + '/generator_' + args.model_name + '_49800.h5'
+        modelpath = 'models/' + args.model_name + '/generator_' + args.model_name + '_800.h5'
         if not os.path.exists (modelpath):
             assert ('please check the model path')
     # Change model input shape to accept all size inputs
