@@ -19,7 +19,7 @@ tflite_model_file = 'models/fastsr_model/finetune_quantized_fastsr.tflite'
 if not os.path.exists(tflite_model_file):
     with tfmot.quantization.keras.quantize_scope():
         quant_aware_model = tf.keras.models.load_model(keras_model_file)
-
+    
     quant_aware_model.summary()
 
     converter = tf.lite.TFLiteConverter.from_keras_model(quant_aware_model)
@@ -34,6 +34,7 @@ if not os.path.exists(tflite_model_file):
 
 # # tflite inference
 interpreter = tf.lite.Interpreter(model_path = tflite_model_file)
+#interpreter.resize_tensor_input(0, [num_test_images, 224, 224, 3])
 
 interpreter.allocate_tensors()
 
