@@ -11,8 +11,8 @@ import tensorflow_model_optimization as tfmot
 
 parser = ArgumentParser()
 parser.add_argument('--image', type=str, default='lr-1.jpg')
-parser.add_argument('--initmodel', type=str, default = '../../models/fastsr_model/generator_fastsr_model_quant.h5')
-parser.add_argument('--tflite', type=str, default = 'FASTRGAN_quant.tflite')
+parser.add_argument('--initmodel', type=str, default = '../../models/fastsr_model_leaky/fine_q_generator_fastsr_model_leaky_200.h5')
+parser.add_argument('--tflite', type=str, default = 'FASTRGAN_quant_leaky.tflite')
 
 
 print(tf.__version__)
@@ -93,7 +93,7 @@ sr = (((sr + 1) / 2.) * 255).astype(np.uint8)
 # Convert back to BGR for opencv
 
 sr = cv2.cvtColor(sr, cv2.COLOR_RGB2BGR)
-srname = args.image.split('.')[0] + '_sr_quant.jpg'
+srname = args.image.split('.')[0] + '_sr_quant_leaky2.jpg'
 cv2.imwrite(srname,sr)
 
 
