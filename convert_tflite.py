@@ -13,8 +13,8 @@ parser.add_argument('--output_dir', type=str, help='Directory where to output hi
 #parser.add_argument('--model_name', type=str, help='model',default='models/generator.h5')
 
 # #################### Keras convert to tflite ########################
-keras_model_file = 'models/fastsr_model/fine_q_generator_fastsr_model_200.h5'
-tflite_model_file = 'models/fastsr_model/finetune_quantized_fastsr.tflite'
+keras_model_file = 'models/fastsr_model_leaky/generator_fastsr_model_leaky_800.h5'
+tflite_model_file = 'models/fastsr_model_leaky/finetune_quantized_fastsr_leaky.tflite'
 # check the tflite_model_file exist or not
 if not os.path.exists(tflite_model_file):
     with tfmot.quantization.keras.quantize_scope():
@@ -46,7 +46,7 @@ output_details = interpreter.get_output_details()
 args = parser.parse_args()
 
 args.image_dir = '/mnt/SuperResolution/data/test_Internet'
-args.output_dir = 'result/fastsr_model-tflite'
+args.output_dir = 'result/fastsr_model_leaky-tflite'
 
 # Get all image paths
 image_paths = [os.path.join(args.image_dir, x) for x in os.listdir(args.image_dir)]
@@ -68,7 +68,7 @@ for image_path in image_paths:
 
     # Convert to RGB (opencv uses BGR as default)
     low_res = cv2.cvtColor(low_res, cv2.COLOR_BGR2RGB)
-
+    low_res = cv2.resize(low_res,(96,96))
     # Rescale to 0-1.
     low_res = low_res / 255.0
 

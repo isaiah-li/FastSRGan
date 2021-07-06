@@ -126,11 +126,12 @@ class FastSRGAN(object):
                                         use_bias=True,
                                         activation=None,
                                         name=prefix + 'expand')(x)
-                x = keras.layers.BatchNormalization(axis=channel_axis,
-                                                    epsilon=1e-3,
-                                                    momentum=0.999,
-                                                    name=prefix + 'expand_BN')(x)
-                x = keras.layers.Activation('relu', name=prefix + 'expand_relu')(x)
+                # x = keras.layers.BatchNormalization(axis=channel_axis,
+                #                                     epsilon=1e-3,
+                #                                     momentum=0.999,
+                #                                     name=prefix + 'expand_BN')(x)
+                x = keras.layers.LeakyReLU()(x)
+                #x = keras.layers.Activation(keras.layers.LeakyReLU(), name=prefix + 'expand_relu')(x)
             else:
                 prefix = 'expanded_conv_'
 
@@ -141,12 +142,13 @@ class FastSRGAN(object):
                                              use_bias=True,
                                              padding='same' if stride == 1 else 'valid',
                                              name=prefix + 'depthwise')(x)
-            x = keras.layers.BatchNormalization(axis=channel_axis,
-                                                epsilon=1e-3,
-                                                momentum=0.999,
-                                                name=prefix + 'depthwise_BN')(x)
+            # x = keras.layers.BatchNormalization(axis=channel_axis,
+            #                                     epsilon=1e-3,
+            #                                     momentum=0.999,
+            #                                     name=prefix + 'depthwise_BN')(x)
 
-            x = keras.layers.Activation('relu', name=prefix + 'depthwise_relu')(x)
+            x = keras.layers.LeakyReLU()(x)
+            # x = keras.layers.Activation(keras.layers.LeakyReLU(), name=prefix + 'depthwise_relu')(x)
 
             # Project
             x = keras.layers.Conv2D(pointwise_filters,
@@ -155,10 +157,10 @@ class FastSRGAN(object):
                                     use_bias=True,
                                     activation=None,
                                     name=prefix + 'project')(x)
-            x = keras.layers.BatchNormalization(axis=channel_axis,
-                                                epsilon=1e-3,
-                                                momentum=0.999,
-                                                name=prefix + 'project_BN')(x)
+            # x = keras.layers.BatchNormalization(axis=channel_axis,
+            #                                     epsilon=1e-3,
+            #                                     momentum=0.999,
+            #                                     name=prefix + 'project_BN')(x)
 
             if in_channels == pointwise_filters and stride == 1:
                 return keras.layers.Add(name=prefix + 'add')([inputs, x])
@@ -174,13 +176,14 @@ class FastSRGAN(object):
             """
             u = keras.layers.UpSampling2D(size=2, interpolation='bilinear')(layer_input)
             u = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(u)
-            u = keras.layers.ReLU()(u)
+            u = keras.layers.LeakyReLU()(u)
             # u = keras.layers.PReLU(shared_axes=[1, 2])(u)
             return u
         # ############### edsr module ##################
         def res_block(input_tensor, filters, scale=0.1):
             x = keras.layers.Conv2D(filters=filters, kernel_size=3, strides=1, padding='same')(input_tensor)
-            x = keras.layers.Activation('relu')(x)
+            #x = keras.layers.Activation('leaky_relu')(x)
+            x = keras.layers.LeakyReLU()(x)
 
             x = keras.layers.Conv2D(filters=filters, kernel_size=3, strides=1, padding='same')(x)
             if scale:
@@ -201,7 +204,8 @@ class FastSRGAN(object):
         def upsample(input_tensor, filters):
             x = keras.layers.Conv2D(filters=filters * 4, kernel_size=3, strides=1, padding='same')(input_tensor)
             x = sub_pixel_conv2d(scale=2)(x)
-            x = keras.layers.Activation('relu')(x)
+            x = keras.layers.LeakyReLU()(x)
+            # x = keras.layers.Activation('leaky_relu')(x)
             return x
 
         # #########################################
@@ -214,9 +218,9 @@ class FastSRGAN(object):
              
         # Pre-residual block
         c1 = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(img_lr)
-        c1 = keras.layers.BatchNormalization()(c1)
+        # c1 = keras.layers.BatchNormalization()(c1)
         # c1 = keras.layers.PReLU(shared_axes=[1, 2])(c1)
-        c1 = keras.layers.ReLU()(c1)
+        c1 = keras.layers.LeakyReLU()(c1)
 
 
         # Propogate through residual blocks
@@ -226,7 +230,7 @@ class FastSRGAN(object):
 
         # Post-residual block
         c2 = keras.layers.Conv2D(self.gf, kernel_size=3, strides=1, padding='same')(r)
-        c2 = keras.layers.BatchNormalization()(c2)
+        # c2 = keras.layers.BatchNormalization()(c2)
         c2 = keras.layers.Add()([c2, c1])
         
         # Upsampling

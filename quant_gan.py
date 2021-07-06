@@ -74,8 +74,8 @@ def main():
     dis_model = keras.models.load_model(dis_modelpath)
     
     ### when the model trained by GPU,
-    gen_model = change_model(gen_model, new_input_shape=[None, None, None, 3])
-    dis_model = change_model(dis_model, new_input_shape=[None, None, None, 3])
+    gen_model = change_model(gen_model, new_input_shape=[None, 96, 96, 3])
+    dis_model = change_model(dis_model, new_input_shape=[None, 384, 384, 3])
 
     ##############################################################################
     # ############################## quantize the model ##########################    
@@ -99,8 +99,8 @@ def main():
 
 
     # ## save generator and discriminator model
-    # gen_q_aware_model.save('models/' + args.model_name + '/generator_' + args.model_name + '_quant.h5')
-    # dis_q_aware_model.save('models/' + args.model_name + '/discriminator_' + args.model_name + '_quant.h5')
+    gen_q_aware_model.save('models/' + args.model_name + '/generator_' + args.model_name + '_quant.h5')
+    dis_q_aware_model.save('models/' + args.model_name + '/discriminator_' + args.model_name + '_quant.h5')
 
     print('quantize end')
     print('Will FineTune ... ')
